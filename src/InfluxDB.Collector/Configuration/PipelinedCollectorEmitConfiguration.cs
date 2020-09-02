@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using InfluxDB.Collector.Pipeline;
 using InfluxDB.Collector.Pipeline.Emit;
 
@@ -20,12 +21,15 @@ namespace InfluxDB.Collector.Configuration
             _configuration = configuration;
         }
 
-        public override CollectorConfiguration InfluxDB(Uri serverBaseAddress, string database, string username = null, string password = null)
+        public override CollectorConfiguration InfluxDB(Uri serverBaseAddress, string database, string username = null, string password = null, HttpMessageHandler handler = null)
         {
+           if (handler == null)
+              handler = new HttpClientHandler();
+
             if (string.Compare(serverBaseAddress.Scheme, "udp", ignoreCase: true) == 0)
                 _client = new LineProtocolUdpClient(serverBaseAddress, database, username, password);
             else
-                _client = new LineProtocolClient(serverBaseAddress, database, username, password);
+                _client = new LineProtocolClient(handler, serverBaseAddress, database, username, password);
             return _configuration;
         }
 

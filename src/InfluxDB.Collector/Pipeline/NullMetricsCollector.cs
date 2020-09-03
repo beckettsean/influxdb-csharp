@@ -5,5 +5,9 @@
         protected override void Emit(PointData[] points)
         {
         }
+
+        protected override void Emit(PointData point)
+        {
+        }
     }
 }

@@ -4,7 +4,7 @@ using InfluxDB.Collector.Pipeline;
 
 namespace InfluxDB.Collector.Configuration
 {
-    class AggregateEmitter : IPointEmitter
+    class AggregateEmitter : IPointEmitter, ISinglePointEmitter
     {
         readonly List<IPointEmitter> _emitters;
 
@@ -18,6 +18,21 @@ namespace InfluxDB.Collector.Configuration
         {
             foreach (var emitter in _emitters)
                 emitter.Emit(points);
+        }
+
+        public void Emit(PointData point)
+        {
+            foreach (var emitter in _emitters)
+            {
+                if (emitter is ISinglePointEmitter singlePointEmitter)
+                {
+                    singlePointEmitter.Emit(point);
+                }
+                else
+                {
+                    emitter.Emit(new[] { point });
+                }
+            }
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace InfluxDB.Collector.Pipeline
 {
@@ -22,6 +21,20 @@ namespace InfluxDB.Collector.Pipeline
                 _enricher.Enrich(point);
 
             _emitter.Emit(points);
+        }
+
+        protected override void Emit(PointData point)
+        {
+            _enricher.Enrich(point);
+
+            if (_emitter is ISinglePointEmitter singlePointEmitter)
+            {
+                singlePointEmitter.Emit(point);
+            }
+            else
+            {
+                _emitter.Emit(new[] { point });
+            }
         }
 
         protected override void Dispose(bool disposing)

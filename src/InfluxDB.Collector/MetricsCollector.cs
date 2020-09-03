@@ -5,7 +5,7 @@ using InfluxDB.Collector.Pipeline;
 
 namespace InfluxDB.Collector
 {
-    public abstract class MetricsCollector : IPointEmitter, IDisposable
+    public abstract class MetricsCollector : IPointEmitter, ISinglePointEmitter, IDisposable
     {
         readonly Util.ITimestampSource _timestampSource = new Util.PseudoHighResTimestampSource();
 
@@ -34,14 +34,16 @@ namespace InfluxDB.Collector
             Dispose(true);
         }
 
-        protected virtual void Dispose(bool disposing) { }
+        protected virtual void Dispose(bool disposing)
+        {
+        }
 
         public void Write(string measurement, IReadOnlyDictionary<string, object> fields, IReadOnlyDictionary<string, string> tags = null, DateTime? timestamp = null)
         {
             try
             {
                 var point = new PointData(measurement, fields, tags, timestamp ?? _timestampSource.GetUtcNow());
-                Emit(new[] { point });
+                Emit(point);
             }
             catch (Exception ex)
             {
@@ -54,6 +56,16 @@ namespace InfluxDB.Collector
             Emit(points);
         }
 
+        void ISinglePointEmitter.Emit(PointData point)
+        {
+            Emit(point);
+        }
+
         protected abstract void Emit(PointData[] points);
+
+        protected virtual void Emit(PointData point)
+        {
+            Emit(new[] { point });
+        }
     }
 }

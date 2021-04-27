@@ -65,7 +65,7 @@ namespace InfluxDB.LineProtocol.Payload
 
         static string FormatString(string s)
         {
-            return "\"" + s.Replace("\"", "\\\"") + "\"";
+            return "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
 
         public static string FormatTimestamp(DateTime utcTimestamp)

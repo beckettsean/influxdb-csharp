@@ -6,7 +6,7 @@ using System.IO;
 
 namespace InfluxDB.LineProtocol.Tests
 {
-    public class LineProtcolPointTests
+    public class LineProtocolPointTests
     {
         [Fact]
         public void CompleteExampleFromDocs()
@@ -54,5 +54,31 @@ namespace InfluxDB.LineProtocol.Tests
 
             Assert.Equal(expected, sw.ToString());
         }
+
+        [Fact]
+        public void ExampleWithJsonTextWithNestedDoubleQuote()
+        {
+            const string expected = "\"measurement\\ with\\ json\\ with\\ quotes\",symbol=test field_key=\"{\\\"content\\\":\\\"test \\\\\\\" data\\\"}\" 1441756800000000000";
+
+            var json = "{\"content\":\"test \\\" data\"}";
+
+            var point = new LineProtocolPoint(
+                "\"measurement with json with quotes\"",
+                new Dictionary<string, object>
+                {
+                    { "field_key", json }
+                },
+                new Dictionary<string, string>
+                {
+                    { "symbol", "test" }
+                },
+                new DateTime(2015, 9, 9, 0, 0, 0, DateTimeKind.Utc));
+
+            var sw = new StringWriter();
+            point.Format(sw);
+
+            Assert.Equal(expected, sw.ToString());
+        }
+
     }
 }

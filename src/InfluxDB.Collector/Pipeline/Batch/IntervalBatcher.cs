@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using InfluxDB.Collector.Diagnostics;
 using InfluxDB.Collector.Platform;
@@ -10,8 +12,7 @@ namespace InfluxDB.Collector.Pipeline.Batch
 {
     class IntervalBatcher : IPointEmitter, IDisposable
     {
-        readonly object _queueLock = new object();
-        Queue<PointData> _queue = new Queue<PointData>();
+        ConcurrentQueue<PointData> _queue = new ConcurrentQueue<PointData>();
 
         readonly TimeSpan _interval;
         readonly int? _maxBatchSize;
@@ -54,19 +55,17 @@ namespace InfluxDB.Collector.Pipeline.Batch
         {
             try
             {
-                Queue<PointData> batch;
-                lock (_queueLock)
-                {
-                    if (_queue.Count == 0)
-                        return Task.Delay(0);
+                if (_queue.IsEmpty)
+                    return Task.Delay(0);
+                
+                var batch = Interlocked.Exchange(ref _queue, new ConcurrentQueue<PointData>()).ToArray();
+                
+                if (batch.Length == 0)
+                    return Task.Delay(0);
 
-                    batch = _queue;
-                    _queue = new Queue<PointData>();
-                }
-
-                if (_maxBatchSize == null || batch.Count <= _maxBatchSize.Value)
+                if (_maxBatchSize == null || batch.Length <= _maxBatchSize.Value)
                 {
-                    _parent.Emit(batch.ToArray());
+                    _parent.Emit(batch);
                 }
                 else
                 {
@@ -104,11 +103,8 @@ namespace InfluxDB.Collector.Pipeline.Batch
                 }
             }
 
-            lock (_queueLock)
-            {
-                foreach(var point in points)
-                    _queue.Enqueue(point);
-            }
+            foreach (var point in points)
+                _queue.Enqueue(point);
         }
     }
 }

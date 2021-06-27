@@ -20,6 +20,7 @@
     <PackageReference Include="System.Net.Sockets" Version="4.3.0" />
     <ProjectReference Include="..\InfluxDB.LineProtocol\InfluxDB.LineProtocol.csproj" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
+    <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
     <PackageReference Include="System.Threading" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.0" />
